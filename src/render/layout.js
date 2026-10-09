@@ -3,7 +3,7 @@ import { config } from '../config.js';
 import { esc, mediaUrl, safeUrl, waNumber, isTrue, paragraphs } from '../util.js';
 import { ICONS } from './icons.js';
 
-const FONT_URL = 'https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap';
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;800&display=swap';
 
 /**
  * @param {object} ctx  { env, url, settings, cacheVersion }
@@ -34,7 +34,7 @@ ${description ? `<meta name="description" content="${esc(description)}">` : ''}
 ${description ? `<meta property="og:description" content="${esc(description)}">` : ''}
 <meta property="og:url" content="${esc(canonical)}">
 ${ogImage ? `<meta property="og:image" content="${esc(ogImage.startsWith('https://') ? ogImage : url.origin + mediaUrl(ogImage))}">` : ''}
-<meta name="theme-color" content="#0d0a18">
+<meta name="theme-color" content="#ffffff">
 ${page.noindex ? '<meta name="robots" content="noindex">' : ''}
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -73,7 +73,7 @@ function header(ctx, current, name, logo) {
 <a class="brand" href="/" aria-label="${esc(name)} – דף הבית">${brand}</a>
 <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav"><span class="sr-only">תפריט</span><span class="bars" aria-hidden="true"></span></button>
 <nav id="site-nav" class="site-nav" aria-label="תפריט ראשי"><ul>${links}</ul></nav>
-<a class="btn btn-primary header-cta" href="/contact">דברו איתנו</a>
+<a class="btn btn-dark header-cta" href="/contact">${esc(ctx.settings['home.cta.button'] || 'דברו איתנו')} <span aria-hidden="true">←</span></a>
 </div>
 </header>`;
 }
