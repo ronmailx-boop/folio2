@@ -426,8 +426,8 @@ function fieldControl(f, value, onInput) {
     const band = h('span', { class: 'sample-band', text: 'כותרת מודגשת' });
     const paint = (c) => {
       if (!/^#[0-9a-f]{6}$/i.test(c)) return;
-      // כמו באתר: צבע ההדגשה הוא הגוון הבהיר של הצבע הראשי, על רקע כהה
-      const accent = `color-mix(in srgb, ${c} 55%, #fff)`;
+      // כמו באתר: צבע ההדגשה הוא הגוון הכהה של הצבע הראשי, על רקע לבן
+      const accent = `color-mix(in srgb, ${c} 80%, #000)`;
       btnSample.style.background = accent;
       band.style.color = accent;
     };
