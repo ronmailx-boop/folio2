@@ -1,0 +1,45 @@
+# Folio1 – הגדרות Cloudflare Worker
+# ללקוח חדש: שנה את name, database_name ו-bucket_name (ראה NEW_CLIENT.md).
+# את database_id אין צורך למלא: ה-workflows ב-GitHub Actions ממלאים אותו בזמן ריצה.
+
+name = "folio2"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+# דומיין מותאם (Custom Domain). Cloudflare יוצר לבד את רשומת ה-DNS ואת תעודת ה-SSL.
+# הדומיין הראשי (vplusstudio.app) חייב להיות באותו חשבון Cloudflare.
+# ללקוח חדש: להחליף לדומיין שלו, או למחוק את השורה עד שהדומיין מוכן (ואז האתר יעבוד רק ב-workers.dev).
+# משתנה GitHub בשם CUSTOM_DOMAIN, אם מוגדר, גובר על השורה הזו.
+routes = [ { pattern = "folio2.vplusstudio.app", custom_domain = true } ]
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[vars]
+# אתר דמו: "true". אתר של לקוח אמיתי: "false".
+DEMO_MODE = "true"
+# סימן המים "נבנה על ידי VPlus Studio". רק הבעלים משנה, לא מלוח הניהול.
+SHOW_CREDIT = "true"
+DEMO_EMAIL = "demo@folio2.app"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "folio2-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "folio2-media"
+
+# איפוס דמו לילי (01:00 UTC). באתר שאינו דמו ה-handler פשוט לא עושה כלום.
+[triggers]
+crons = ["0 1 * * *"]
+
+# מזהה הגרסה הפרוסה: נכנס למפתח הקאש, כך שכל פריסה מנקה את הדפים השמורים.
+[version_metadata]
+binding = "CF_VERSION_METADATA"
+
+[observability]
+enabled = true

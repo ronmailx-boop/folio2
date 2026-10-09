@@ -1,0 +1,2 @@
+# העתק לקובץ .dev.vars לפיתוח מקומי בלבד (הקובץ .dev.vars לא נכנס ל-git).
+DEMO_PASSWORD=change-me-demo
