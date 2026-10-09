@@ -1,0 +1,101 @@
+{
+  "$comment": "הגדרות התבנית. לוח הניהול מייצר את טפסי העריכה אוטומטית מ-pages, fields ו-settingsFields. כדי להוסיף שדה: הוסף אותו כאן והשתמש במפתח שלו בתבנית ב-src/render.",
+  "siteName": "קליניקת נוגה",
+  "lang": "he",
+  "defaultPrimaryColor": "#d6457a",
+  "secondaryColor": "#a83563",
+  "creditText": "נבנה על ידי VPlus Studio",
+  "creditUrl": "https://vplusstudio.app",
+  "limits": {
+    "maxGallery": 200,
+    "maxServices": 60,
+    "maxUploadBytes": 2097152,
+    "contactPerHour": 5,
+    "loginAttempts": 5,
+    "loginWindowMinutes": 15
+  },
+  "demoLimits": {
+    "maxGallery": 20,
+    "maxServices": 15,
+    "maxUploadBytes": 1048576
+  },
+  "pages": [
+    { "id": "home", "label": "דף הבית", "path": "/" },
+    { "id": "about", "label": "אודות", "path": "/about" },
+    { "id": "services", "label": "שירותים", "path": "/services" },
+    { "id": "gallery", "label": "גלריה", "path": "/gallery" },
+    { "id": "contact", "label": "צור קשר", "path": "/contact" },
+    { "id": "accessibility", "label": "הצהרת נגישות", "path": "/accessibility", "inNav": false },
+    { "id": "footer", "label": "תחתית האתר", "path": null }
+  ],
+  "fields": [
+    { "key": "home.hero.badge", "label": "תגית קטנה מעל הכותרת (למשל: פנויים לפרויקטים חדשים). ריק = לא מוצגת", "type": "line", "page": "home" },
+    { "key": "home.hero.title", "label": "כותרת ראשית", "type": "line", "page": "home", "default": "ברוכים הבאים" },
+    { "key": "home.hero.title_accent", "label": "המשך הכותרת, בשורה נפרדת ובצבע מודגש (לא חובה)", "type": "line", "page": "home" },
+    { "key": "home.hero.subtitle", "label": "תת-כותרת", "type": "paragraph", "page": "home" },
+    { "key": "home.hero.cta_text", "label": "טקסט הכפתור", "type": "line", "page": "home", "default": "צרו קשר" },
+    { "key": "home.hero.cta_link", "label": "לאן הכפתור מוביל (למשל /contact)", "type": "url", "page": "home", "default": "/contact" },
+    { "key": "home.feature1.stat", "label": "יתרון 1 – מספר בולט (למשל 10+). ריק = אייקון", "type": "line", "page": "home" },
+    { "key": "home.feature1.title", "label": "יתרון 1 – כותרת", "type": "line", "page": "home" },
+    { "key": "home.feature1.text", "label": "יתרון 1 – טקסט", "type": "paragraph", "page": "home" },
+    { "key": "home.feature2.stat", "label": "יתרון 2 – מספר בולט (למשל 10+). ריק = אייקון", "type": "line", "page": "home" },
+    { "key": "home.feature2.title", "label": "יתרון 2 – כותרת", "type": "line", "page": "home" },
+    { "key": "home.feature2.text", "label": "יתרון 2 – טקסט", "type": "paragraph", "page": "home" },
+    { "key": "home.feature3.stat", "label": "יתרון 3 – מספר בולט (למשל 10+). ריק = אייקון", "type": "line", "page": "home" },
+    { "key": "home.feature3.title", "label": "יתרון 3 – כותרת", "type": "line", "page": "home" },
+    { "key": "home.feature3.text", "label": "יתרון 3 – טקסט", "type": "paragraph", "page": "home" },
+    { "key": "home.services.title", "label": "כותרת אזור השירותים", "type": "line", "page": "home", "default": "השירותים שלנו" },
+    { "key": "home.gallery.title", "label": "כותרת אזור הגלריה", "type": "line", "page": "home", "default": "מהעבודות שלנו" },
+    { "key": "home.cta.title", "label": "קריאה לפעולה – כותרת", "type": "line", "page": "home" },
+    { "key": "home.cta.text", "label": "קריאה לפעולה – טקסט", "type": "paragraph", "page": "home" },
+    { "key": "home.cta.button", "label": "קריאה לפעולה – טקסט הכפתור", "type": "line", "page": "home", "default": "דברו איתנו" },
+    { "key": "seo.home.title", "label": "כותרת לגוגל (title)", "type": "line", "page": "home", "group": "seo" },
+    { "key": "seo.home.description", "label": "תיאור לגוגל (meta description)", "type": "paragraph", "page": "home", "group": "seo" },
+
+    { "key": "about.title", "label": "כותרת", "type": "line", "page": "about", "default": "אודות" },
+    { "key": "about.text", "label": "טקסט", "type": "paragraph", "page": "about" },
+    { "key": "about.image", "label": "תמונה", "type": "image", "page": "about" },
+    { "key": "about.image_alt", "label": "תיאור התמונה (לעיוורים ולגוגל)", "type": "line", "page": "about" },
+    { "key": "seo.about.title", "label": "כותרת לגוגל (title)", "type": "line", "page": "about", "group": "seo" },
+    { "key": "seo.about.description", "label": "תיאור לגוגל (meta description)", "type": "paragraph", "page": "about", "group": "seo" },
+
+    { "key": "services.title", "label": "כותרת", "type": "line", "page": "services", "default": "שירותים" },
+    { "key": "services.intro", "label": "פסקת פתיחה", "type": "paragraph", "page": "services" },
+    { "key": "seo.services.title", "label": "כותרת לגוגל (title)", "type": "line", "page": "services", "group": "seo" },
+    { "key": "seo.services.description", "label": "תיאור לגוגל (meta description)", "type": "paragraph", "page": "services", "group": "seo" },
+
+    { "key": "gallery.title", "label": "כותרת", "type": "line", "page": "gallery", "default": "גלריה" },
+    { "key": "gallery.intro", "label": "פסקת פתיחה", "type": "paragraph", "page": "gallery" },
+    { "key": "seo.gallery.title", "label": "כותרת לגוגל (title)", "type": "line", "page": "gallery", "group": "seo" },
+    { "key": "seo.gallery.description", "label": "תיאור לגוגל (meta description)", "type": "paragraph", "page": "gallery", "group": "seo" },
+
+    { "key": "contact.title", "label": "כותרת", "type": "line", "page": "contact", "default": "צור קשר" },
+    { "key": "contact.intro", "label": "פסקת פתיחה", "type": "paragraph", "page": "contact" },
+    { "key": "contact.success", "label": "הודעת תודה אחרי שליחה", "type": "paragraph", "page": "contact", "default": "תודה! ההודעה התקבלה ונחזור אליך בהקדם." },
+    { "key": "seo.contact.title", "label": "כותרת לגוגל (title)", "type": "line", "page": "contact", "group": "seo" },
+    { "key": "seo.contact.description", "label": "תיאור לגוגל (meta description)", "type": "paragraph", "page": "contact", "group": "seo" },
+
+    { "key": "accessibility.title", "label": "כותרת", "type": "line", "page": "accessibility", "default": "הצהרת נגישות" },
+    { "key": "accessibility.text", "label": "טקסט ההצהרה", "type": "paragraph", "page": "accessibility" },
+    { "key": "seo.accessibility.title", "label": "כותרת לגוגל (title)", "type": "line", "page": "accessibility", "group": "seo" },
+    { "key": "seo.accessibility.description", "label": "תיאור לגוגל (meta description)", "type": "paragraph", "page": "accessibility", "group": "seo" },
+
+    { "key": "footer.text", "label": "טקסט קצר בתחתית", "type": "paragraph", "page": "footer" }
+  ],
+  "settingsFields": [
+    { "key": "business.name", "label": "שם העסק", "type": "line", "default": "העסק שלי" },
+    { "key": "business.tagline", "label": "משפט קצר על העסק", "type": "line" },
+    { "key": "brand.logo", "label": "לוגו", "type": "image" },
+    { "key": "brand.primary_color", "label": "צבע ראשי", "type": "color", "default": "#d6457a" },
+    { "key": "contact.phone", "label": "טלפון", "type": "tel" },
+    { "key": "contact.whatsapp", "label": "מספר וואטסאפ (למשל 0500000000)", "type": "tel" },
+    { "key": "contact.email", "label": "מייל", "type": "email" },
+    { "key": "contact.address", "label": "כתובת", "type": "line" },
+    { "key": "contact.hours", "label": "שעות פעילות", "type": "paragraph" },
+    { "key": "contact.map_url", "label": "קישור למפה (Google Maps / Waze)", "type": "url" },
+    { "key": "social.facebook", "label": "פייסבוק (קישור)", "type": "url" },
+    { "key": "social.instagram", "label": "אינסטגרם (קישור)", "type": "url" },
+    { "key": "social.tiktok", "label": "טיקטוק (קישור)", "type": "url" },
+    { "key": "social.linkedin", "label": "לינקדאין (קישור)", "type": "url" }
+  ]
+}

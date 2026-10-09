@@ -1,0 +1,39 @@
+# איפוס ידני של נתוני הדמו (האיפוס האוטומטי רץ כל לילה ב-Cron Trigger של ה-Worker).
+# מחזיר את הטקסטים, השירותים, הגלריה וההודעות למצב ההתחלתי. העלאות ב-R2 נמחקות באיפוס הלילי.
+name: Demo reset
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: רק באתר דמו
+        run: |
+          grep -qE '^DEMO_MODE\s*=\s*"true"' wrangler.toml || { echo "::error::DEMO_MODE אינו true ב-wrangler.toml. האיפוס מוחק תוכן, ולכן הוא חסום באתר אמיתי."; exit 1; }
+      - name: איתור D1
+        id: res
+        run: node scripts/ci-resources.mjs
+      - name: איפוס
+        if: steps.res.outputs.found == 'true'
+        run: |
+          # בלי DEMO_PASSWORD: משתמש הדמו הקיים נשמר כמו שהוא
+          node scripts/seed-sql.mjs > seed.sql
+          npx wrangler d1 execute DB --remote --file seed.sql
+          rm -f seed.sql
+          echo "### ✅ נתוני הדמו אופסו" >> "$GITHUB_STEP_SUMMARY"

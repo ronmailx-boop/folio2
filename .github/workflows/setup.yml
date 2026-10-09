@@ -1,0 +1,146 @@
+# הקמה חד-פעמית (אפשר להריץ שוב בבטחה): יוצר D1 ו-R2, מריץ מיגרציות, פורס,
+# מגדיר סודות, יוצר משתמש מנהל וזורע נתוני דמו.
+# הרצה מהנייד: לשונית Actions ← Setup ← Run workflow.
+name: Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: 'למלא תוכן לדוגמה אם האתר ריק (באתר דמו זה קורה תמיד)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: בדיקת Secrets
+        env:
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          missing=""
+          [ -z "$CLOUDFLARE_API_TOKEN" ] && missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -z "$CLOUDFLARE_ACCOUNT_ID" ] && missing="$missing CLOUDFLARE_ACCOUNT_ID"
+          [ -z "$ADMIN_EMAIL" ] && missing="$missing ADMIN_EMAIL"
+          [ -z "$ADMIN_PASSWORD" ] && missing="$missing ADMIN_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::חסרים Secrets:$missing. הוסיפו אותם ב-Settings ← Secrets and variables ← Actions."
+            exit 1
+          fi
+          if [ ${#ADMIN_PASSWORD} -lt 10 ]; then
+            echo "::error::ADMIN_PASSWORD צריך להכיל לפחות 10 תווים."
+            exit 1
+          fi
+
+      - run: npm ci
+
+      - name: בדיקות
+        run: npm run check
+
+      - name: יצירת D1 ו-R2 (אם לא קיימים)
+        env:
+          CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN }}
+        run: node scripts/ci-resources.mjs --create
+
+      - name: מיגרציות
+        run: npx wrangler d1 migrations apply DB --remote
+
+      - name: פריסה
+        run: npx wrangler deploy 2>&1 | tee deploy.log
+
+      - name: הגדרת סודות ב-Worker
+        id: secrets
+        env:
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY || vars.TURNSTILE_SITE_KEY }}
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+        run: |
+          DEMO_MODE=$(grep -E '^DEMO_MODE' wrangler.toml | sed -E 's/.*"(.*)".*/\1/')
+          echo "demo_mode=$DEMO_MODE" >> "$GITHUB_OUTPUT"
+          if [ "$DEMO_MODE" = "true" ] && [ -z "$DEMO_PASSWORD" ]; then
+            # סיסמת הדמו פומבית בכוונה (מוצגת בדף הכניסה). אם לא הוגדרה, נוצרת אחת חדשה.
+            DEMO_PASSWORD="demo-$(node -e "console.log(require('crypto').randomBytes(4).toString('hex'))")"
+            echo "::notice::נוצרה סיסמת דמו חדשה. היא מוצגת בדף הכניסה ללוח."
+          fi
+          echo "::add-mask::$DEMO_PASSWORD"
+          echo "DEMO_PASSWORD=$DEMO_PASSWORD" >> "$GITHUB_ENV"
+          HASH_SALT=$(node -e "console.log(require('crypto').randomBytes(16).toString('hex'))")
+          export DEMO_PASSWORD HASH_SALT
+          node -e '
+            const keys = ["DEMO_PASSWORD","HASH_SALT","RESEND_API_KEY","NOTIFY_EMAIL","MAIL_FROM","TURNSTILE_SITE_KEY","TURNSTILE_SECRET"];
+            const out = {};
+            for (const k of keys) if (process.env[k]) out[k] = process.env[k];
+            require("fs").writeFileSync("secrets.json", JSON.stringify(out), { mode: 0o600 });
+            console.log("מגדיר:", Object.keys(out).join(", "));
+          '
+          npx wrangler secret bulk secrets.json
+          rm -f secrets.json
+
+      - name: יצירת משתמש מנהל
+        env:
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          node scripts/admin-user-sql.mjs > admin.sql
+          npx wrangler d1 execute DB --remote --file admin.sql
+          rm -f admin.sql
+
+      - name: נתוני דמו / תוכן לדוגמה
+        env:
+          WANT_SEED: ${{ inputs.seed }}
+        run: |
+          COUNT=$(npx wrangler d1 execute DB --remote --json --command "SELECT COUNT(*) AS n FROM settings WHERE key NOT LIKE '\_%' ESCAPE '\'" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s.slice(s.indexOf("[")));console.log(j[0].results[0].n)})')
+          echo "הגדרות קיימות: $COUNT"
+          if [ "${{ steps.secrets.outputs.demo_mode }}" = "true" ] || { [ "$WANT_SEED" = "true" ] && [ "$COUNT" = "0" ]; }; then
+            if [ "${{ steps.secrets.outputs.demo_mode }}" != "true" ]; then unset DEMO_PASSWORD; fi
+            node scripts/seed-sql.mjs > seed.sql
+            npx wrangler d1 execute DB --remote --file seed.sql
+            rm -f seed.sql
+            echo "SEEDED=yes" >> "$GITHUB_ENV"
+          else
+            echo "דילוג על זריעה."
+          fi
+
+      - name: סיכום
+        env:
+          CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN }}
+        run: |
+          URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          {
+            echo "## ✅ ההקמה הסתיימה"
+            echo ""
+            [ -n "$URL" ] && echo "- כתובת האתר: $URL" && echo "- לוח הניהול: $URL/admin/"
+            [ -n "$CUSTOM_DOMAIN" ] && echo "- דומיין: https://$CUSTOM_DOMAIN (ולוח הניהול ב-https://$CUSTOM_DOMAIN/admin/)"
+            echo "- מצב דמו: ${{ steps.secrets.outputs.demo_mode }}"
+            [ "$SEEDED" = "yes" ] && echo "- נתוני דמו נטענו."
+            echo ""
+            echo "### הצעדים הבאים"
+            echo "1. היכנסו ללוח הניהול עם ADMIN_EMAIL ו-ADMIN_PASSWORD."
+            echo "2. מעכשיו כל שינוי ב-main נפרס אוטומטית (workflow: Deploy)."
+            [ -z "$CUSTOM_DOMAIN" ] && echo "3. לחיבור דומיין: הוסיפו משתנה CUSTOM_DOMAIN ב-Settings ← Secrets and variables ← Actions ← Variables, והריצו שוב את Setup."
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat "$GITHUB_STEP_SUMMARY"
