@@ -16,32 +16,21 @@ function img(key, alt, { width = 800, height = 600, cls = '', eager = false } = 
   return `<img src="${esc(mediaUrl(key))}" alt="${esc(alt)}" width="${width}" height="${height}"${cls ? ` class="${cls}"` : ''} ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
 }
 
-function serviceCard(svc, { headingLevel = 3, big = false } = {}) {
+/** שירותים כרשימה ממוספרת (כיוון "מינימל לבן"). withImages: תמונה קטנה בכל שורה (בדף השירותים). */
+function serviceList(services, { headingLevel = 3, withImages = false } = {}) {
   const h = `h${headingLevel}`;
-  const media = svc.image_key ? `<div class="card-media">${img(svc.image_key, '', { width: 800, height: 600 })}</div>` : '';
-  const price = svc.price_text ? `<p class="price">${esc(svc.price_text)}</p>` : '';
-  if (big) {
-    return `<article class="card svc svc-big">
+  return `<ol class="svc-list">${services
+    .map((x, i) => {
+      const media = withImages && x.image_key ? `<div class="svc-media">${img(x.image_key, '', { width: 480, height: 360 })}</div>` : '';
+      return `<li class="svc-row${media ? ' has-media' : ''}">
+<span class="svc-num" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>
 ${media}
-<div class="svc-foot">
-<div><${h}>${esc(svc.title)}</${h}><div class="desc">${paragraphs(svc.description)}</div></div>
-${price}
-</div>
-</article>`;
-  }
-  return `<article class="card svc">
-${media}
-<${h}>${esc(svc.title)}</${h}>
-<div class="desc">${paragraphs(svc.description)}</div>
-${price}
-</article>`;
-}
-
-/** שירותים בפריסת "בנטו": הראשון גדול (אם יש לו תמונה), השאר כרטיסים רגילים. */
-function bento(services, headingLevel = 3) {
-  return `<div class="bento">${services
-    .map((x, i) => serviceCard(x, { headingLevel, big: i === 0 && !!x.image_key && services.length > 2 }))
-    .join('')}</div>`;
+<${h} class="svc-title">${esc(x.title)}</${h}>
+<div class="svc-desc">${paragraphs(x.description)}</div>
+${x.price_text ? `<p class="svc-price">${esc(x.price_text)}</p>` : ''}
+</li>`;
+    })
+    .join('')}</ol>`;
 }
 
 function galleryGrid(items) {
@@ -88,12 +77,18 @@ export function homePage(s, services, gallery) {
   const body = `
 <section class="hero">
 <div class="container">
-${s['home.hero.badge'] ? `<p class="badge"><span class="badge-dot" aria-hidden="true"></span>${esc(s['home.hero.badge'])}</p>` : ''}
+${
+  s['business.tagline'] || s['home.hero.badge']
+    ? `<div class="hero-meta">${s['business.tagline'] ? `<p class="tagline">${esc(s['business.tagline'])}</p>` : '<span></span>'}${
+        s['home.hero.badge'] ? `<p class="badge"><span class="badge-dot" aria-hidden="true"></span>${esc(s['home.hero.badge'])}</p>` : ''
+      }</div>`
+    : ''
+}
 <h1>${esc(s['home.hero.title'])}${accent ? `<br><span class="accent">${esc(accent)}</span>` : ''}</h1>
 <div class="hero-row">
 ${s['home.hero.subtitle'] ? `<div class="hero-sub">${paragraphs(s['home.hero.subtitle'])}</div>` : '<div></div>'}
 <div class="hero-actions">
-${s['home.hero.cta_text'] ? `<a class="btn btn-light btn-lg" href="${esc(cta)}">${esc(s['home.hero.cta_text'])}</a>` : ''}
+${s['home.hero.cta_text'] ? `<a class="btn btn-primary btn-lg" href="${esc(cta)}">${esc(s['home.hero.cta_text'])} <span aria-hidden="true">←</span></a>` : ''}
 ${gallery.length ? '<a class="btn btn-ghost btn-lg" href="/gallery">לגלריה</a>' : ''}
 </div>
 </div>
@@ -110,8 +105,8 @@ ${stats ? `<section class="stats" aria-label="היתרונות שלנו"><div cl
 ${
   services.length
     ? `<section class="section"><div class="container">
-<div class="section-head"><h2>${esc(s['home.services.title'])}</h2><a href="/services" class="more">לכל השירותים <span aria-hidden="true">←</span></a></div>
-${bento(services)}
+<div class="section-head"><h2>${esc(s['home.services.title'])}</h2><a href="/services" class="more">לכל הטיפולים והמחירים <span aria-hidden="true">←</span></a></div>
+${serviceList(services)}
 </div></section>`
     : ''
 }
@@ -131,8 +126,8 @@ ${
 ${paragraphs(s['home.cta.text'])}
 </div>
 <div class="cta-actions">
-<a class="btn btn-dark btn-lg" href="/contact">${esc(s['home.cta.button'])}</a>
-${wa ? `<a class="btn btn-outline-dark btn-lg" href="https://wa.me/${wa}" target="_blank" rel="noopener">וואטסאפ${s['contact.whatsapp'] ? ` ${esc(s['contact.whatsapp'])}` : ''}</a>` : ''}
+<a class="btn btn-primary btn-lg" href="/contact">${esc(s['home.cta.button'])} <span aria-hidden="true">←</span></a>
+${wa ? `<a class="btn btn-outline-light btn-lg" href="https://wa.me/${wa}" target="_blank" rel="noopener">וואטסאפ${s['contact.whatsapp'] ? ` ${esc(s['contact.whatsapp'])}` : ''}</a>` : ''}
 </div>
 </div></div></section>`
     : ''
@@ -153,7 +148,7 @@ ${image ? `<div class="about-media">${img(image, s['about.image_alt'] || '', { e
 export function servicesPage(s, services) {
   const body = `${pageHead(s['services.title'], s['services.intro'])}
 <section class="section"><div class="container">
-${services.length ? bento(services, 2) : '<p class="empty">בקרוב יעלו כאן השירותים שלנו.</p>'}
+${services.length ? serviceList(services, { headingLevel: 2, withImages: true }) : '<p class="empty">בקרוב יעלו כאן השירותים שלנו.</p>'}
 </div></section>`;
   return { id: 'services', ...seo(s, 'services', s['services.title']), body };
 }
